@@ -5,7 +5,6 @@
 #include <math.h>
 #include <time.h>
 
-
 static int rank, nb_procs;
 static int local_size_y;
 
@@ -27,9 +26,6 @@ static stencil_t*prev_values = NULL;
 
 static int size_x = STENCIL_SIZE;
 static int size_y = STENCIL_SIZE;
-
-
-
 
 static void stencil_init_mpi(void){
 
@@ -109,31 +105,6 @@ static int stencil_step_mpi(void) {
     return local_convergence;
 }
 
-/** init stencil values to 0, borders to non-zero */
-static void stencil_init(void)
-{
-  values = malloc(size_x * size_y * sizeof(stencil_t));
-  prev_values = malloc(size_x * size_y * sizeof(stencil_t));
-  int x, y;
-  for(x = 0; x < size_x; x++)
-    {
-      for(y = 0; y < size_y; y++)
-        {
-          values[x + size_x * y] = 0.0;
-        }
-    }
-  for(x = 0; x < size_x; x++)
-    {
-      values[x + size_x * 0] = x;
-      values[x + size_x * (size_y - 1)] = size_x - x - 1;
-    }
-  for(y = 0; y < size_y; y++)
-    {
-      values[0 + size_x * y] = y;
-      values[size_x - 1 + size_x * y] = size_y - y - 1;
-    }
-  memcpy(prev_values, values, size_x * size_y * sizeof(stencil_t));
-}
 
 static void stencil_free(void)
 {
@@ -162,36 +133,12 @@ static void stencil_display(void){
 }
 
 
-/** compute the next stencil step, return 1 if computation has converged */
-static int stencil_step(void)
-{
-  int convergence = 1;
-  /* switch buffers */
-  stencil_t*tmp = prev_values;
-  prev_values = values;
-  values = tmp;
-  int x, y;
-  for(y = 1; y < size_y - 1; y++)
-    {
-      for(x = 1; x < size_x - 1; x++)
-        {
-          values[x + size_x * y] =
-            alpha * ( prev_values[x - 1 + size_x * y] +
-                      prev_values[x + 1 + size_x * y] +
-                      prev_values[x + size_x * (y - 1)] +
-                      prev_values[x + size_x * (y + 1)]) +
-            (1.0 - 4.0 * alpha) * prev_values[x + size_x * y];
-          if(convergence && (fabs(prev_values[x + size_x * y] - values[x + size_x * y]) > epsilon))
-            {
-              convergence = 0;
-            }
-        }
-    }
-  return convergence;
-}
-
 int main(int argc, char**argv)
-{
+{	
+	MPI_Init(&argc, &argv);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &nb_procs);
+
 
 	if (argc < 2) {
         fprintf(stderr, "Usage: %s <taille> ou %s <largeur> <hauteur>\n", argv[0], argv[0]);
@@ -205,19 +152,15 @@ int main(int argc, char**argv)
         return 1;
     }
 
-	printf("# Taille: %d x %d\n", size_x, size_y);
-  	printf("# init:\n");
-
-
-	MPI_Init(&argc, &argv);
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    MPI_Comm_size(MPI_COMM_WORLD, &nb_procs);
+	if (rank == 0){
+		printf("# Taille: %d x %d\n", size_x, size_y);
+  		printf("# init:\n");
+	}
 
 
   	stencil_init_mpi();
 
 	exchange_halos();
-
 	stencil_display();
   
 	double t1 = MPI_Wtime();
@@ -227,7 +170,6 @@ int main(int argc, char**argv)
         exchange_halos();
         int local_conv = stencil_step_mpi();
 
-        // Réduction pour savoir si TOUT LE MONDE a convergé
         MPI_Allreduce(&local_conv, &global_conv, 1, MPI_INT, MPI_LAND, MPI_COMM_WORLD);
         if (global_conv) break;
     }
@@ -242,5 +184,4 @@ int main(int argc, char**argv)
     stencil_free();
     MPI_Finalize();
     return 0;
-
 }
