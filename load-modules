@@ -1,0 +1,2 @@
+module load mpi/openmpi/3.1.4
+module load language/python/3.8.0
