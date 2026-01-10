@@ -1,6 +1,6 @@
 CC      = gcc
 MPICC   = mpicc
-CFLAGS += -Wall -g -O4 -fopenmp
+CFLAGS += -Wall -g -O4 -fopenmp -std=gnu11
 LDLIBS += -lm -lrt
 
 
