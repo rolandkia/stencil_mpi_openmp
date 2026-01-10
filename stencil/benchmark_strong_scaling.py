@@ -7,8 +7,8 @@ import argparse
 
 
 parser = argparse.ArgumentParser(description="Benchmark Strong Scaling MPI ou OpenMP")
-parser.add_argument("mode", choices=['mpi', 'omp'], help="Mode d'exécution : mpi ou omp")
-parser.add_argument("size", type=int, default= 256, help="Charge de travail commune")
+parser.add_argument("-m", "--mode", choices=['mpi', 'omp'], help="Mode d'exécution : mpi ou omp")
+parser.add_argument("-s", "--size", type=int, default= 512, help="Charge de travail commune")
 parser.add_argument("executable", help="Chemin vers l'exécutable")
 parser.add_argument("--max_p", type=int, default=12, help="Nombre max de coeurs à tester")
 args = parser.parse_args()

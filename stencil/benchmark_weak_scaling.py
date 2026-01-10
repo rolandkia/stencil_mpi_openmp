@@ -6,8 +6,8 @@ import os
 import argparse
 
 parser = argparse.ArgumentParser(description="Benchmark Weak Scaling MPI ou OpenMP")
-parser.add_argument("mode", choices=['mpi', 'omp'], help="Mode d'exécution : mpi ou omp")
-parser.add_argument("size", type=int, default= 256, help="Charge de travail pour chaque processus")
+parser.add_argument("-m", "--mode", choices=['mpi', 'omp'], help="Mode d'exécution : mpi ou omp")
+parser.add_argument("-s", "--size", type=int, default= 256, help="Charge de travail pour chaque processus")
 parser.add_argument("executable", help="Chemin vers l'exécutable")
 parser.add_argument("--max_p", type=int, default=12, help="Nombre max de coeurs à tester")
 args = parser.parse_args()
@@ -66,7 +66,7 @@ plt.subplot(1, 2, 1)
 efficacite_list = [(g / (p * results_gflops[0])) * 100 for g, p in zip(results_gflops, PROCS)]
 plt.plot(PROCS, efficacite_list, 'o-', color='red', linewidth=2)
 plt.axhline(y=100, color='gray', linestyle='--')
-plt.title(f'Efficacité Parallèle ({args.mode.upper()})')
+plt.title(f'Efficacité Parallèle ({args.mode.upper()})\n Charge constante : {BASE_N}x{BASE_N} par coeur')
 plt.xlabel(label_x)
 plt.ylabel('Efficacité (%)')
 plt.ylim(0, 110)
