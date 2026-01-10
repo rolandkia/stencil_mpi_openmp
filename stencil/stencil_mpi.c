@@ -27,42 +27,52 @@ static stencil_t*prev_values = NULL;
 static int size_x = STENCIL_SIZE;
 static int size_y = STENCIL_SIZE;
 
-static void stencil_init_mpi(void){
+static void stencil_init_mpi(void) {
 
+	int base_size = size_y / nb_procs;
+    int remainder = size_y % nb_procs;
 
-	local_size_y = size_y/nb_procs; // on suppose dans un premier temps que size_y%nb_procs == 0
+    if (rank < remainder) {
+        local_size_y = base_size + 1;
+    } else {
+        local_size_y = base_size;
+    }
 
-	size_t mem_size = (local_size_y+2)*size_x*sizeof(stencil_t);
-	values = malloc(mem_size);
-	prev_values = malloc(mem_size);
+    int global_y_start;
+    if (rank < remainder) {
+        global_y_start = rank * (base_size + 1);
+    } else {
+        global_y_start = rank * base_size + remainder;
+    }
 
-	memset(values, 0, mem_size);
+    size_t mem_size = (local_size_y + 2) * size_x * sizeof(stencil_t);
+    values = malloc(mem_size);
+    prev_values = malloc(mem_size);
+    memset(values, 0, mem_size);
 
-	if (rank == 0){
-		for (int x = 0; x<size_x; x++){
-			values[x + size_x * 0] = x;
-			values[x + size_x * 1] = x;
+    if (rank == 0) {
+        for (int x = 0; x < size_x; x++) {
+            values[x + size_x * 0] = x; // Ghost cell du haut
+            values[x + size_x * 1] = x; // Première ligne réelle
+        }
+    }
 
-		}
-	}
+    if (rank == nb_procs - 1) {
+        for (int x = 0; x < size_x; x++) {
+            values[x + size_x * (local_size_y + 1)] = size_x - x - 1; // Ghost cell du bas
+            values[x + size_x * (local_size_y + 0)] = size_x - x - 1; // Dernière ligne réelle
+        }
+    }
 
-	if (rank == nb_procs - 1){
-		for (int x = 0; x<size_x; x++){
-      		values[x + size_x * (local_size_y+1)] = size_x - x - 1;
-      		values[x + size_x * (local_size_y+0)] = size_x - x - 1;
+    for (int y_local = 1; y_local <= local_size_y; y_local++) {
+        // On utilise l'offset global calculé plus haut
+        int y_global = (y_local - 1) + global_y_start;
 
-		}
-	}
+        values[0 + size_x * y_local] = y_global;
+        values[(size_x - 1) + size_x * y_local] = size_y - y_global - 1;
+    }
 
-	for(int y_local = 1; y_local <= local_size_y; y_local++) {
-
-		int y_global = (y_local - 1) + (rank * local_size_y);
-
-    	values[0 + size_x * y_local] = y_global;
-		values[(size_x - 1) + size_x * y_local] = size_y - y_global - 1;
-	}
-
-	memcpy(prev_values, values, mem_size);
+    memcpy(prev_values, values, mem_size);
 }
 
 static void exchange_halos(void) {
@@ -141,7 +151,9 @@ int main(int argc, char**argv)
 
 
 	if (argc < 2) {
-        fprintf(stderr, "Usage: %s <taille> ou %s <largeur> <hauteur>\n", argv[0], argv[0]);
+		if (rank == 0){
+       		fprintf(stderr, "Usage: %s <taille> ou %s <largeur> <hauteur>\n", argv[0], argv[0]);
+		}
     } else {
         size_x = atoi(argv[1]);
         size_y = (argc > 2) ? atoi(argv[2]) : size_x;
@@ -160,7 +172,7 @@ int main(int argc, char**argv)
 
   	stencil_init_mpi();
 
-	exchange_halos();
+	// exchange_halos();
 	stencil_display();
   
 	double t1 = MPI_Wtime();
