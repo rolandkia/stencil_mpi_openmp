@@ -6,6 +6,9 @@ import os
 import argparse
 
 
+
+
+
 parser = argparse.ArgumentParser(description="Benchmark Strong Scaling MPI ou OpenMP")
 parser.add_argument("-m", "--mode", choices=['mpi', 'omp'], help="Mode d'exécution : mpi ou omp")
 parser.add_argument("-s", "--size", type=int, default= 512, help="Charge de travail commune")
@@ -48,8 +51,8 @@ def run_test(p_val, size):
     return np.mean(gflops_list) if gflops_list else 0
 
 
-print(f"Démarrage Weak Scaling - Mode: {args.mode.upper()}")
-print(f"{'P/Threads':>10} | {'N Total':>8} | {'GFLOPS Moy':>12} | {'Efficacité':>10}")
+print(f"Démarrage Strong Scaling - Mode: {args.mode.upper()}, SIZE : {N_FIXE}x{N_FIXE}")
+print(f"{'P/Threads':>10} | {'GFLOPS Moy':>12} |{'SpeedUp':>10}")
 print("-" * 50)
 
 results_gflops = []
@@ -58,9 +61,8 @@ for p in PROCS:
     results_gflops.append(avg_gflops)
     
     speedup = avg_gflops / results_gflops[0]
-    efficacite = (speedup / p) * 100
     
-    print(f"{p:4d} | {avg_gflops:12.4f} | {speedup:10.2f} | {efficacite:9.1f}%")
+    print(f"{p:4d} | {avg_gflops:12.4f} | {speedup:10.2f}")
 
 speedup_reel = [g / results_gflops[0] for g in results_gflops]
 
