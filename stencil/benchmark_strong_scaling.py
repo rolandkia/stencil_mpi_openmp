@@ -6,26 +6,25 @@ import os
 import argparse
 
 
-
-
+executables = {"mpi": "./stencil_mpi", "omp" : "./stencil_openmp"}
 
 parser = argparse.ArgumentParser(description="Benchmark Strong Scaling MPI ou OpenMP")
-parser.add_argument("-m", "--mode", choices=['mpi', 'omp'], help="Mode d'exécution : mpi ou omp")
+parser.add_argument("-m", "--modes", choices=['mpi', 'omp'], nargs='+', required=True, 
+                    help="Modes à tester (ex: -m mpi, -m omp ou -m mpi omp)")
 parser.add_argument("-s", "--size", type=int, default= 512, help="Charge de travail commune")
-parser.add_argument("executable", help="Chemin vers l'exécutable")
 parser.add_argument("--max_p", type=int, default=12, help="Nombre max de coeurs à tester")
 args = parser.parse_args()
 
 
-EXEC = args.executable
 N_FIXE = args.size
-PROCS = [1, 2, 4, 6, 8, 10, 12] # Ou list(range(1, args.max_p + 1))
+PROCS = [1, 2, 4, 6, 8, 10, 12] #list(range(1, args.max_p + 1))
 ITERATIONS = 3
 
-def run_test(p_val, size):
+def run_test(mode, p_val, size):
+    EXEC = executables[mode]
     env = os.environ.copy()
     
-    if args.mode == 'mpi':
+    if mode == 'mpi':
         # Commande MPI
         cmd = [
             "mpirun", "-np", str(p_val),
@@ -34,7 +33,7 @@ def run_test(p_val, size):
             EXEC, str(size)
         ]
     else:
-        # Commande OpenMP
+		# Commande OpenMP
         env["OMP_NUM_THREADS"] = str(p_val)
         cmd = [EXEC, str(size)]
     
@@ -51,44 +50,57 @@ def run_test(p_val, size):
     return np.mean(gflops_list) if gflops_list else 0
 
 
-print(f"Démarrage Strong Scaling - Mode: {args.mode.upper()}, SIZE : {N_FIXE}x{N_FIXE}")
-print(f"{'P/Threads':>10} | {'GFLOPS Moy':>12} |{'SpeedUp':>10}")
-print("-" * 50)
+all_results = {}
 
-results_gflops = []
-for p in PROCS:
-    avg_gflops = run_test(p, N_FIXE)
-    results_gflops.append(avg_gflops)
-    
-    speedup = avg_gflops / results_gflops[0]
-    
-    print(f"{p:4d} | {avg_gflops:12.4f} | {speedup:10.2f}")
+for mode in args.modes:
+	print(f"Démarrage Strong Scaling - Mode: {mode}")
+	print(f"{'P/Threads':>10} | {'GFLOPS Moy':>12} |{'SpeedUp':>10}")
+	print("-" * 50)
 
-speedup_reel = [g / results_gflops[0] for g in results_gflops]
+	results_gflops = []
+	for p in PROCS:
+		avg_gflops = run_test(mode, p, N_FIXE)
+		results_gflops.append(avg_gflops)
+		
+		speedup = avg_gflops / results_gflops[0]
+		
+		print(f"{p:4d} | {avg_gflops:12.4f} | {speedup:10.2f}")
+
+	all_results[mode] = results_gflops
 
 plt.figure(figsize=(15, 6))
 
-label_x = "Nombre de processus MPI" if args.mode == 'mpi' else "Nombre de threads OpenMP"
-
 plt.subplot(1, 2, 1)
-plt.plot(PROCS, speedup_reel, 'o-', label='Speedup', color='red', linewidth=2)
+
+for mode, gflops in all_results.items():
+	speedup_reel = [g / gflops[0] for g in gflops]
+	plt.plot(PROCS, speedup_reel, 'o-', label=f"Mode {mode}")
+
+
 plt.plot(PROCS, PROCS, '--', label='Ideal', color='gray', alpha=0.7)
-plt.xlabel(label_x)
+plt.xlabel("Nombre de processus/Threads")
 plt.ylabel('Speedup (T1/Tp)')
 plt.title(f'Scalabilité Forte (Speedup)\nGrille {N_FIXE}x{N_FIXE}')
 plt.legend()
 plt.grid(True, linestyle=':')
 
+
 plt.subplot(1, 2, 2)
-gflops_ideaux = [p * results_gflops[0] for p in PROCS]
-plt.plot(PROCS, results_gflops, 's-', color='green', linewidth=2, label='Mesurés')
-plt.plot(PROCS, gflops_ideaux, '--', color='gray', alpha=0.7, label='Idéal')
-plt.title(f'Performance Totale\nMode {args.mode.upper()}')
-plt.xlabel(label_x)
-plt.ylabel('GFLOPS Globaux')
+
+for mode, gflops in all_results.items():
+    plt.plot(PROCS, gflops, 's-', label=f"Mode {mode}")
+
+plt.title('Performance Totale')
+plt.xlabel("Nombre de processus/Threads")
+plt.ylabel("GFLOPS")
 plt.legend()
-plt.grid(True, linestyle=':')
+plt.grid(True, linestyle=':', alpha=0.6)
+
 
 plt.tight_layout()
-plt.savefig(f"strong_scaling_{args.mode}.png")
+plt.savefig(f"benchmark_strong_scaling_{'_'.join(args.modes)}.png")
 plt.show()
+
+
+
+
