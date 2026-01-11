@@ -4,7 +4,7 @@ CFLAGS += -Wall -g -O4 -fopenmp -std=gnu11
 LDLIBS += -lm -lrt
 
 
-TARGETS = stencil stencil_mpi stencil_openmp stencil_mpi_openmp
+TARGETS = stencil stencil_mpi stencil_openmp stencil_mpi_openmp stencil_recouvrement
 
 
 all: $(TARGETS)
@@ -22,6 +22,9 @@ stencil_openmp: stencil_openmp.c
 
 stencil_mpi_openmp: stencil_mpi_openmp.c
 	$(MPICC) $(CFLAGS) stencil_mpi_openmp.c -o stencil_mpi_openmp $(LDLIBS)
+
+stencil_recouvrement: stencil_recouvrement.c
+	$(MPICC) $(CFLAGS) stencil_recouvrement.c -o stencil_recouvrement $(LDLIBS)
 
 
 clean:
