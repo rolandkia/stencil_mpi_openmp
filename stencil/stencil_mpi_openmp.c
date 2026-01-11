@@ -161,8 +161,8 @@ int main(int argc, char**argv)
 
   	stencil_init_mpi();
 
-	exchange_halos();
-	stencil_display();
+	// exchange_halos();
+	// stencil_display();
   
 	double t1 = MPI_Wtime();
     int s, global_conv = 0;
