@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 import argparse
+import matplotlib.ticker as ticker
 
 executables = {
     "mpi": "./stencil_mpi", 
@@ -96,6 +97,10 @@ plt.figure(figsize=(15, 6))
 
 plt.subplot(1, 2, 1)
 
+plt.xticks(PROCS) 
+plt.gca().xaxis.set_major_formatter(ticker.FormatStrFormatter('%d')) 
+
+
 for mode, gflops in all_results.items():
 	speedup_reel = [g / gflops[0] for g in gflops]
 	plt.plot(PROCS, speedup_reel, 'o-', label=f"Mode {mode}")
@@ -109,6 +114,9 @@ plt.legend()
 plt.grid(True, linestyle=':')
 
 plt.subplot(1, 2, 2)
+
+plt.xticks(PROCS) 
+plt.gca().xaxis.set_major_formatter(ticker.FormatStrFormatter('%d')) 
 
 for mode, gflops in all_results.items():
     plt.plot(PROCS, gflops, 's-', label=f"Mode {mode}")

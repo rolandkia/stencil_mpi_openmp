@@ -4,6 +4,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 import argparse
+import matplotlib.ticker as ticker
+
 
 executables = {
     "mpi": "./stencil_mpi", 
@@ -99,6 +101,9 @@ plt.figure(figsize=(15, 6))
 
 plt.subplot(1, 2, 1)
 
+plt.xticks(PROCS) 
+plt.gca().xaxis.set_major_formatter(ticker.FormatStrFormatter('%d'))
+
 for mode, gflops in all_results.items():
     eff_list = [(g / ((p/PROCS[0]) * gflops[0])) * 100 for g, p in zip(gflops, PROCS)]
     
@@ -114,6 +119,10 @@ plt.grid(True, linestyle=':', alpha=0.6)
 
 
 plt.subplot(1, 2, 2)
+
+plt.xticks(PROCS)  
+plt.gca().xaxis.set_major_formatter(ticker.FormatStrFormatter('%d'))  
+
 for mode, gflops in all_results.items():
     plt.plot(PROCS, gflops, 's-', label=f"Mode {mode.upper()}")
 
