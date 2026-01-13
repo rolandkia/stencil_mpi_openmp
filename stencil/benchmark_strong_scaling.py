@@ -26,10 +26,13 @@ THREADS_FIXED = 6
 
 if args.max_p == None:
 	PROCS = [1, 2, 4, 6, 8, 10, 12]
-elif 'mpi_omp' in args.modes:
-    PROCS = [6, 12, 18, 24]
 else:
     PROCS = args.max_p
+    
+if 'mpi_omp' in args.modes:
+    PROCS = [6, 12, 18, 24]
+
+    
 
 
 def run_test(mode, p_val, size):
