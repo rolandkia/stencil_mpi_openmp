@@ -5,20 +5,32 @@ import numpy as np
 import os
 import argparse
 
-
-executables = {"mpi": "./stencil_mpi", "omp" : "./stencil_openmp"}
-
+executables = {
+    "mpi": "./stencil_mpi", 
+	"omp" : "./stencil_openmp",
+	"mpi_omp" : "./stencil_mpi_openmp"
+}
 parser = argparse.ArgumentParser(description="Benchmark Strong Scaling MPI ou OpenMP")
-parser.add_argument("-m", "--modes", choices=['mpi', 'omp'], nargs='+', required=True, 
-                    help="Modes à tester (ex: -m mpi, -m omp ou -m mpi omp)")
-parser.add_argument("-s", "--size", type=int, default= 512, help="Charge de travail commune")
-parser.add_argument("--max_p", type=int, default=12, help="Nombre max de coeurs à tester")
+parser.add_argument("-m", "--modes", choices=['mpi', 'omp', 'mpi_omp'], nargs='+', required=True, 
+                    help="Modes à tester (ex: -m mpi, -m omp, -m mpi omp, -m mpi_omp mpi)")
+parser.add_argument("-s", "--size", type=int, default= 256, help="Charge de travail commune")
+parser.add_argument("-p","--max_p", nargs='+', type=int, help="Sequence de coeurs à tester")
 args = parser.parse_args()
 
-
 N_FIXE = args.size
-PROCS = [1, 2, 4, 6, 8, 10, 12] #list(range(1, args.max_p + 1))
 ITERATIONS = 3
+
+
+# Nombre de thread par processus MPI uniquement si utilisation --modes mpi_omp
+THREADS_FIXED = 6
+
+if args.max_p == None:
+	PROCS = [1, 2, 4, 6, 8, 10, 12]
+elif 'mpi_omp' in args.modes:
+    PROCS = [6, 12, 18, 24]
+else:
+    PROCS = args.max_p
+
 
 def run_test(mode, p_val, size):
     EXEC = executables[mode]
@@ -28,14 +40,24 @@ def run_test(mode, p_val, size):
         # Commande MPI
         cmd = [
             "mpirun", "-np", str(p_val),
-            "--mca", "pml", "^ucx", "--mca", "osc", "^ucx",
             "--bind-to", "core",
             EXEC, str(size)
         ]
-    else:
+    elif mode == 'omp':
 		# Commande OpenMP
         env["OMP_NUM_THREADS"] = str(p_val)
         cmd = [EXEC, str(size)]
+        
+    else:
+		# Commande MPI_OpenMP
+        env["OMP_NUM_THREADS"] = str(THREADS_FIXED)
+        env["OMP_PROC_BIND"] = "true"
+        env["OMP_PLACES"] = "cores"
+        cmd = [
+            "mpirun", "-np", str(p_val//THREADS_FIXED),
+            "--map-by", f"numa:PE={THREADS_FIXED}",
+            "--bind-to", "core",
+            EXEC, str(size)]  
     
     gflops_list = []
     for i in range(ITERATIONS):
