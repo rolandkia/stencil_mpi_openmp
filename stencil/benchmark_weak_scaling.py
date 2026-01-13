@@ -100,11 +100,12 @@ plt.figure(figsize=(15, 6))
 plt.subplot(1, 2, 1)
 
 for mode, gflops in all_results.items():
-    eff_list = [(g / (p * gflops[0])) * 100 for g, p in zip(gflops, PROCS)]
+    eff_list = [(g / ((p/PROCS[0]) * gflops[0])) * 100 for g, p in zip(gflops, PROCS)]
+    
     plt.plot(PROCS, eff_list, 'o-', label=f"Mode {mode.upper()}")
 
 
-# plt.axhline(y=100, color='black', linestyle='--', alpha=0.3)
+plt.axhline(y=100, color='black', linestyle='--', alpha=0.3)
 plt.title(f'Efficacité Parallèle (Weak Scaling)\nCharge/coeur: {BASE_N}x{BASE_N}')
 plt.xlabel("Nombre de processus/Threads")
 plt.ylabel("Efficacité (%)")

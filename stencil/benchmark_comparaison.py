@@ -12,7 +12,6 @@ executables = {
 	"mpi_omp" : "./stencil_mpi_openmp"
 }
 
-
 parser = argparse.ArgumentParser(description="Benchmark Seq vs MPI vs OMP vs MPI + OMP")
 parser.add_argument("-s", "--size", type=int, default= 512, help="Taille de la matrice")
 args = parser.parse_args()

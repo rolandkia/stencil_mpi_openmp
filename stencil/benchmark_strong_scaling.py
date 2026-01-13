@@ -13,13 +13,12 @@ executables = {
 parser = argparse.ArgumentParser(description="Benchmark Strong Scaling MPI ou OpenMP")
 parser.add_argument("-m", "--modes", choices=['mpi', 'omp', 'mpi_omp'], nargs='+', required=True, 
                     help="Modes à tester (ex: -m mpi, -m omp, -m mpi omp, -m mpi_omp mpi)")
-parser.add_argument("-s", "--size", type=int, default= 256, help="Charge de travail commune")
+parser.add_argument("-s", "--size", type=int, default= 512, help="Charge de travail commune")
 parser.add_argument("-p","--max_p", nargs='+', type=int, help="Sequence de coeurs à tester")
 args = parser.parse_args()
 
 N_FIXE = args.size
 ITERATIONS = 3
-
 
 # Nombre de thread par processus MPI uniquement si utilisation --modes mpi_omp
 THREADS_FIXED = 6
@@ -33,8 +32,6 @@ if 'mpi_omp' in args.modes:
     PROCS = [6, 12, 18, 24]
 
     
-
-
 def run_test(mode, p_val, size):
     EXEC = executables[mode]
     env = os.environ.copy()
@@ -104,20 +101,19 @@ for mode, gflops in all_results.items():
 	plt.plot(PROCS, speedup_reel, 'o-', label=f"Mode {mode}")
 
 
-# plt.plot(PROCS, PROCS, '--', label='Ideal', color='gray', alpha=0.7)
+plt.plot(PROCS, [PROCS[i]//PROCS[0] for i in range(len(PROCS))], '--', label='Ideal', color='gray', alpha=0.7)
 plt.xlabel("Nombre de processus/Threads")
 plt.ylabel('Speedup (T1/Tp)')
 plt.title(f'Scalabilité Forte (Speedup)\nGrille {N_FIXE}x{N_FIXE}')
 plt.legend()
 plt.grid(True, linestyle=':')
 
-
 plt.subplot(1, 2, 2)
 
 for mode, gflops in all_results.items():
     plt.plot(PROCS, gflops, 's-', label=f"Mode {mode}")
 
-plt.title('Performance Totale')
+plt.title("Performance Totale")
 plt.xlabel("Nombre de processus/Threads")
 plt.ylabel("GFLOPS")
 plt.legend()
