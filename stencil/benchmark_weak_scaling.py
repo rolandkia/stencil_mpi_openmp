@@ -32,7 +32,6 @@ else:
 if 'mpi_omp' in args.modes:
     PROCS = [6, 12, 18, 24]
 
-    
 
 
 def run_test(mode, p_val, size):
@@ -46,9 +45,11 @@ def run_test(mode, p_val, size):
             "--bind-to", "core",
             EXEC, str(size)
         ]
-    elif mode == 'mpi':
+    elif mode == 'omp':
 		# Commande OpenMP
         env["OMP_NUM_THREADS"] = str(p_val)
+        env["OMP_PROC_BIND"] = "close"
+        env["OMP_PLACES"] = "cores"
         cmd = [EXEC, str(size)]
     
     else:
@@ -103,7 +104,7 @@ for mode, gflops in all_results.items():
     plt.plot(PROCS, eff_list, 'o-', label=f"Mode {mode.upper()}")
 
 
-plt.axhline(y=100, color='black', linestyle='--', alpha=0.3)
+# plt.axhline(y=100, color='black', linestyle='--', alpha=0.3)
 plt.title(f'Efficacité Parallèle (Weak Scaling)\nCharge/coeur: {BASE_N}x{BASE_N}')
 plt.xlabel("Nombre de processus/Threads")
 plt.ylabel("Efficacité (%)")

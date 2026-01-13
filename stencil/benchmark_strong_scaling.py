@@ -49,6 +49,8 @@ def run_test(mode, p_val, size):
     elif mode == 'omp':
 		# Commande OpenMP
         env["OMP_NUM_THREADS"] = str(p_val)
+        env["OMP_PROC_BIND"] = "close"
+        env["OMP_PLACES"] = "cores"
         cmd = [EXEC, str(size)]
         
     else:
@@ -102,7 +104,7 @@ for mode, gflops in all_results.items():
 	plt.plot(PROCS, speedup_reel, 'o-', label=f"Mode {mode}")
 
 
-plt.plot(PROCS, PROCS, '--', label='Ideal', color='gray', alpha=0.7)
+# plt.plot(PROCS, PROCS, '--', label='Ideal', color='gray', alpha=0.7)
 plt.xlabel("Nombre de processus/Threads")
 plt.ylabel('Speedup (T1/Tp)')
 plt.title(f'Scalabilité Forte (Speedup)\nGrille {N_FIXE}x{N_FIXE}')
