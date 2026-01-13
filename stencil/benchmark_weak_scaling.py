@@ -90,7 +90,7 @@ for mode in args.modes:
 		avg_gflops = run_test(mode, p, n_total)
 		results_gflops.append(avg_gflops)
 		
-		efficacite = (avg_gflops / (p * results_gflops[0])) * 100 if results_gflops[0] > 0 else 0
+		efficacite = (avg_gflops / ((p/PROCS[0]) * results_gflops[0])) * 100 if results_gflops[0] > 0 else 0
 		print(f"{p:10d} | {n_total:8d} | {avg_gflops:12.4f} | {efficacite:9.1f}%")
 
 	all_results[mode] = results_gflops
