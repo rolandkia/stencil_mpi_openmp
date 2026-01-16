@@ -69,25 +69,25 @@ Tests performance with a **fixed problem size** and increasing number of process
 ```bash
 python3 benchmark_strong_scaling.py -m mpi mpi_omp rec -s 512 -n 2
 ```
-→ Tests MPI, MPI+OpenMP and overlap on a 512×512 grid with 2 nodes.
+Tests MPI, MPI+OpenMP and overlap on a 512×512 grid with 2 nodes.
 
 **MPI-only test on 1 node**
 ```bash
 python3 benchmark_strong_scaling.py -m mpi -s 512 -n 1
 ```
-→ Tests only MPI on 1 node.
+Tests only MPI on 1 node.
 
 **Test with custom sequence**
 ```bash
 python3 benchmark_strong_scaling.py -m mpi_omp -s 1024 -p 6 12 24 48 -n 2
 ```
-→ Tests MPI+OpenMP with 6, 12, 24 then 48 processes (1024×1024 grid).
+Tests MPI+OpenMP with 6, 12, 24 then 48 processes (1024×1024 grid).
 
 **OpenMP test with different thread counts**
 ```bash
 python3 benchmark_strong_scaling.py -m omp -s 512 -p 1 2 4 8 12 24
 ```
-→ Tests OpenMP with 1, 2, 4, 8, 12 and 24 threads.
+Tests OpenMP with 1, 2, 4, 8, 12 and 24 threads.
 
 #### Constraints
 
@@ -115,19 +115,19 @@ Tests performance with a **fixed workload per process/thread** and increasing nu
 ```bash
 python3 benchmark_weak_scaling.py -m mpi mpi_omp rec -s 103 -n 2
 ```
-→ Tests MPI, MPI+OpenMP and overlap with load 103/process on 2 nodes.
+Tests MPI, MPI+OpenMP and overlap with load 103/process on 2 nodes.
 
 **OpenMP test with custom sequence**
 ```bash
 python3 benchmark_weak_scaling.py -m omp -s 103 -p 12 24
 ```
-→ Tests OpenMP with 12 then 24 threads (load 103/thread).
+Tests OpenMP with 12 then 24 threads (load 103/thread).
 
 **Complete hybrid test**
 ```bash
 python3 benchmark_weak_scaling.py -m mpi_omp -s 103 -p 6 12 24 48 -n 2
 ```
-→ Tests MPI+OpenMP with 6, 12, 24, 48 processes (load 103/process).
+Tests MPI+OpenMP with 6, 12, 24, 48 processes (load 103/process).
 
 #### Recommendation
 
@@ -151,13 +151,13 @@ Compares all available versions using **full computing capacity** (all cores).
 ```bash
 python3 benchmark_comparaison.py
 ```
-→ Compares all versions on 512×512 grid with all available cores.
+Compares all versions on 512×512 grid with all available cores.
 
 **Comparison with custom grid**
 ```bash
 python3 benchmark_comparaison.py -s 1024
 ```
-→ Compares all versions on 1024×1024 grid.
+Compares all versions on 1024×1024 grid.
 
 
 ---
