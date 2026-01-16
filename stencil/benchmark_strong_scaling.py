@@ -9,10 +9,12 @@ import matplotlib.ticker as ticker
 executables = {
     "mpi": "./stencil_mpi", 
 	"omp" : "./stencil_openmp",
-	"mpi_omp" : "./stencil_mpi_openmp"
+	"mpi_omp" : "./stencil_mpi_openmp", 
+ 	"rec" : "./stencil_recouvrement"
+
 }
 parser = argparse.ArgumentParser(description="Benchmark Strong Scaling MPI ou OpenMP")
-parser.add_argument("-m", "--modes", choices=['mpi', 'omp', 'mpi_omp'], nargs='+', required=True, 
+parser.add_argument("-m", "--modes", choices=['mpi', 'omp', 'mpi_omp', "rec"], nargs='+', required=True, 
                     help="Modes à tester (ex: -m mpi, -m omp, -m mpi omp, -m mpi_omp mpi)")
 parser.add_argument("-s", "--size", type=int, default= 512, help="Charge de travail commune")
 parser.add_argument("-p","--max_p", nargs='+', type=int, help="Sequence de coeurs à tester")
@@ -60,7 +62,7 @@ def run_test(mode, p_val, size):
         cmd = [EXEC, str(size)]
         
     else:
-		# Commande MPI OpenMP
+		# Commande MPI OpenMP avec ou sans recouvrement
         total_ranks = p_val // THREADS_FIXED
        
         env["OMP_NUM_THREADS"] = str(THREADS_FIXED)
@@ -141,7 +143,7 @@ plt.grid(True, linestyle=':', alpha=0.6)
 
 
 plt.tight_layout()
-plt.savefig(f"benchmark_strong_scaling_{'_'.join(args.modes)}.png")
+plt.savefig(f"benchmark_strong_scaling_{'_'.join(args.modes)}_{args.nodes}.png")
 plt.show()
 
 

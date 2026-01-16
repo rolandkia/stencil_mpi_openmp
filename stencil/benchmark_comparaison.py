@@ -9,7 +9,8 @@ executables = {
 	"seq" : "./stencil",
 	"mpi" : "./stencil_mpi",
 	"omp" : "./stencil_openmp",
-	"mpi_omp" : "./stencil_mpi_openmp"
+	"mpi_omp" : "./stencil_mpi_openmp",
+	"rec" : "./stencil_recouvrement"
 }
 
 parser = argparse.ArgumentParser(description="Benchmark Seq vs MPI vs OMP vs MPI + OMP")
