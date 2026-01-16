@@ -165,5 +165,5 @@ Compares all versions on 1024×1024 grid.
 ##  References
 
 - **OpenMPI Documentation**: https://www.open-mpi.org/doc/
-- **Intel MPI Documentation**: https://www.intel.com/content/www/us/en/docs/mpi-library/
+- **OpenMP Documentation**: https://www.openmp.org/resources/refguides/
 - **PlaFRIM**: https://www.plafrim.fr/
