@@ -64,14 +64,11 @@ static int stencil_step_hybrid_overlap(void) {
     int up = (rank == 0) ? MPI_PROC_NULL : rank - 1;
     int down = (rank == nb_procs - 1) ? MPI_PROC_NULL : rank + 1;
 
-    // ========== PHASE 1: LANCER LES COMMUNICATIONS ==========
     MPI_Irecv(&values[0], size_x, MPI_FLOAT, up, 1, MPI_COMM_WORLD, &requests[0]);
     MPI_Irecv(&values[(local_size_y + 1) * size_x], size_x, MPI_FLOAT, down, 0, MPI_COMM_WORLD, &requests[1]);
     MPI_Isend(&prev_values[size_x], size_x, MPI_FLOAT, up, 0, MPI_COMM_WORLD, &requests[2]);
     MPI_Isend(&prev_values[local_size_y * size_x], size_x, MPI_FLOAT, down, 1, MPI_COMM_WORLD, &requests[3]);
 
-    // ========== PHASE 2: CALCUL INTÉRIEUR (lignes 2 à local_size_y - 1) ==========
-    // Ces lignes n'ont pas besoin des halos MPI
     #pragma omp parallel for reduction(&&:local_convergence) schedule(static)
     for (int y = 2; y <= local_size_y - 1; y++) {
         for (int x = 1; x < size_x - 1; x++) {
@@ -85,11 +82,8 @@ static int stencil_step_hybrid_overlap(void) {
         }
     }
 
-    // ========== PHASE 3: ATTENDRE LES HALOS ==========
     MPI_Waitall(4, requests, MPI_STATUSES_IGNORE);
 
-    // CALCUL DES BORDURES (lignes qui touchent les halos MPI) ==========
-    // Ligne supérieure (y=1) : seulement si on n'est pas le premier rang
     if (rank != 0) {
         int y = 1;
         #pragma omp parallel for reduction(&&:local_convergence) schedule(static)
@@ -104,7 +98,6 @@ static int stencil_step_hybrid_overlap(void) {
         }
     }
 
-    // Ligne inférieure (y=local_size_y) : seulement si on n'est pas le dernier rang
     if (rank != nb_procs - 1) {
         int y = local_size_y;
         #pragma omp parallel for reduction(&&:local_convergence) schedule(static)
@@ -128,8 +121,8 @@ static void stencil_free(void) {
 }
 
 int main(int argc, char**argv) {	
-    // Initialisation avec support multi-threading
-    int provided;
+
+	int provided;
     MPI_Init_thread(&argc, &argv, MPI_THREAD_FUNNELED, &provided);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nb_procs);
@@ -181,7 +174,6 @@ int main(int argc, char**argv) {
         prev_global_conv = global_conv;
     }
 
-    // Attendre la dernière réduction
     if (conv_req != MPI_REQUEST_NULL) {
         MPI_Wait(&conv_req, MPI_STATUS_IGNORE);
     }

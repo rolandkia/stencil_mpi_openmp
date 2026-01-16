@@ -41,7 +41,7 @@ def run_test(mode, size):
         env["OMP_PLACES"] = "cores"
         cmd = [EXEC, str(size)]
         
-    elif mode == "mpi_omp":
+    elif mode == "mpi_omp" or mode == "rec":
         env["OMP_NUM_THREADS"] = str(6)
         env["OMP_PROC_BIND"] = "true"
         env["OMP_PLACES"] = "cores"
@@ -79,13 +79,14 @@ data = {
 	"Séquentiel": all_results["seq"],      # 1 cœur
     "Pur MPI": all_results["mpi"],         # 24 processus
     "Pur OpenMP": all_results["omp"],      # 24 threads
-    "Hybride (4 MPI x6 OMP)": all_results["mpi_omp"]   # 4 MPI x 6 OMP (avec binding)
+    "Hybride (4 MPI x 6 OMP)": all_results["mpi_omp"],   # 4 MPI x 6 OMP (avec binding)
+    "Recouvrement (4 MPI x 6 OMP)" : all_results['rec']
 }
 
 
 labels = list(data.keys())
 values = list(data.values())
-colors = ['#95a5a6', '#3498db', '#e67e22', '#2ecc71'] # Gris, Bleu, Orange, Vert
+colors = ['#95a5a6', '#3498db', '#e67e22', '#2ecc71', "#cf4a07"] # Gris, Bleu, Orange, Vert
 
 plt.figure(figsize=(10, 7))
 bars = plt.bar(labels, values, color=colors, edgecolor='black', alpha=0.8)
