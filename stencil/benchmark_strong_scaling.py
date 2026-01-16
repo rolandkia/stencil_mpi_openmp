@@ -16,6 +16,8 @@ parser.add_argument("-m", "--modes", choices=['mpi', 'omp', 'mpi_omp'], nargs='+
                     help="Modes à tester (ex: -m mpi, -m omp, -m mpi omp, -m mpi_omp mpi)")
 parser.add_argument("-s", "--size", type=int, default= 512, help="Charge de travail commune")
 parser.add_argument("-p","--max_p", nargs='+', type=int, help="Sequence de coeurs à tester")
+parser.add_argument("-n", "--nodes", type=int, default=1, help="Nombre de nœuds réservés")
+
 args = parser.parse_args()
 
 N_FIXE = args.size
@@ -23,15 +25,19 @@ ITERATIONS = 3
 
 # Nombre de thread par processus MPI uniquement si utilisation --modes mpi_omp
 THREADS_FIXED = 6
+# Nombre de processus MPI uniquement si utilisation --modes mpi_omp
+NUMA = 4
 
+PROCS = []
 if args.max_p == None:
 	PROCS = [1, 2, 4, 6, 8, 10, 12]
 else:
     PROCS = args.max_p
     
 if 'mpi_omp' in args.modes:
-    PROCS = [6, 12, 18, 24]
-
+    PROCS = []
+    for p in range(0, args.nodes*NUMA*THREADS_FIXED, THREADS_FIXED):
+        PROCS.append(p + THREADS_FIXED)
     
 def run_test(mode, p_val, size):
     EXEC = executables[mode]
@@ -41,26 +47,32 @@ def run_test(mode, p_val, size):
         # Commande MPI
         cmd = [
             "mpirun", "-np", str(p_val),
+            "--map-by", "core",
             "--bind-to", "core",
             EXEC, str(size)
         ]
     elif mode == 'omp':
 		# Commande OpenMP
-        env["OMP_NUM_THREADS"] = str(p_val)
-        env["OMP_PROC_BIND"] = "close"
+        p_omp = min(p_val, NUMA*THREADS_FIXED)
+        env["OMP_NUM_THREADS"] = str(p_omp)
+        env["OMP_PROC_BIND"] = "spread"
         env["OMP_PLACES"] = "cores"
         cmd = [EXEC, str(size)]
         
     else:
-		# Commande MPI_OpenMP
+		# Commande MPI OpenMP
+        total_ranks = p_val // THREADS_FIXED
+       
         env["OMP_NUM_THREADS"] = str(THREADS_FIXED)
-        env["OMP_PROC_BIND"] = "true"
+        env["OMP_PROC_BIND"] = "spread" 
         env["OMP_PLACES"] = "cores"
+        
         cmd = [
-            "mpirun", "-np", str(p_val//THREADS_FIXED),
-            "--map-by", f"numa:PE={THREADS_FIXED}",
+            "mpirun", "-np", str(total_ranks),
+            "--map-by", f"node:PE={THREADS_FIXED}",
             "--bind-to", "core",
-            EXEC, str(size)]  
+            EXEC, str(size)
+        ]
     
     gflops_list = []
     for i in range(ITERATIONS):
